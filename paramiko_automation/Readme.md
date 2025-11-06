@@ -1,2 +1,2 @@
 ## installation setup
-$ pip install paramiko
+$ pip install -r requirements.txt
