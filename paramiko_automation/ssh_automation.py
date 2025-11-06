@@ -19,11 +19,11 @@ class SSHManager:
        def execute_command(self, commands):
             try:
                 stdin, stdout, stderr = self.ssh_client.exec_command("; ".join(commands))
-                output = stdout.read.decode('utf-8')+stderr.read.decode('utf-8')
+                output = stdout.read().decode('utf-8')+stderr.read().decode('utf-8')
                 exit_code = stdout.channel.recv_exit_status()
                 return output, exit_code
             except Exception as e:
-                 return f"the command didnt run successfully, {e}"
+                 return f"the command didnt run successfully, {e}", 1 
        
        def copy_file_to_remote(self, localfile, remotefile):
             sftp = self.ssh_client.open_sftp()
@@ -43,7 +43,20 @@ def main():
     username = os.getenv("USERNAME")
     password = os.getenv("PASSWORD")
     hostname = sys.argv[1] # I intentionally chose to get the hostname from the arguments; you’re free to use environment variables instead.
-    
+    sshmanager = SSHManager(username, password)
+    cmds = ["whoami"]
+    try:
+        sshmanager.connect(hostname)
+        output, exit_code = sshmanager.execute_command(cmds)
+        if(exit_code):
+             print("command didnt run successfully")
+        else:
+             print("command run successfully")
+        print(output)              
+    except Exception as e:
+         print(f"something went wrong: {e}")
+    finally:
+         sshmanager.close()
 
 if __name__ == "__main__":
     main()
