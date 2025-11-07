@@ -1,0 +1,37 @@
+import paramiko
+class SSHManager:
+       def __init__(self, username, password):
+            self.username = username
+            self.password = password
+            self.ssh_client = paramiko.SSHClient()
+            self.ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            pass
+       
+       def connect(self, hostname):
+            try:
+                 self.ssh_client.connect(hostname, 22, self.username, self.password)
+            except Exception as e:
+                 return f"an error has occured while trying to connect to the host: {e}"
+        
+       
+       def execute_command(self, commands):
+            try:
+                stdin, stdout, stderr = self.ssh_client.exec_command("; ".join(commands))
+                output = stdout.read().decode('utf-8')+stderr.read().decode('utf-8')
+                exit_code = stdout.channel.recv_exit_status()
+                return output, exit_code
+            except Exception as e:
+                 return f"the command didnt run successfully, {e}", 1 
+       
+       def copy_file_to_remote(self, localfile, remotefile):
+            sftp = self.ssh_client.open_sftp()
+            sftp.put(localfile, remotefile)
+            sftp.close()
+       
+       def copy_file_from_remote(self, remotefile, localfile):
+            sftp = self.ssh_client.open_sftp()
+            sftp.get(remotefile, localfile)
+            sftp.close()
+       
+       def close(self):
+            self.ssh_client.close()
